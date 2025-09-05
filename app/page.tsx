@@ -9,7 +9,6 @@ import { OrderBookControls } from "@/components/order-book/order-book-controls";
 import { OrderBookHeader } from "@/components/order-book/order-book-header";
 import { OrderBookSection } from "@/components/order-book/order-book-section";
 import { OrderBookSpread } from "@/components/order-book/order-book-spread";
-import { DebugInfo } from "@/components/debug-info";
 import {
   getStoredSettings,
   setStoredSettings,
@@ -217,7 +216,7 @@ function OrderBookContent({ coin = "BTC" }) {
             </div>
           </div>
         )}
-        <DebugInfo orderBook={orderBook} />
+        {/* <DebugInfo orderBook={orderBook} /> */}
       </div>
     </div>
   );
