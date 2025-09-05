@@ -229,7 +229,15 @@ function LoadingFallback() {
 
 export default function HyperliquidOrderBook({ coin = "BTC" }) {
   return (
-    <Suspense fallback={<LoadingFallback />}>
+    <Suspense
+      fallback={
+        <div className="p-4 min-h-screen">
+          <div className="max-w-[400px] mx-auto">
+            <LoadingFallback />
+          </div>
+        </div>
+      }
+    >
       <OrderBookContent coin={coin} />
     </Suspense>
   );
