@@ -34,7 +34,7 @@ function OrderBookContent({ coin = "BTC" }) {
   };
 
   const [selectedCoin, setSelectedCoin] = useState<Coin>(getInitialCoin());
-  const [sigFigs, setSigFigs] = useState<nSigFigs>(2);
+  const [sigFigs, setSigFigs] = useState<nSigFigs>(null);
   const [denomination, setDenomination] = useState<Denomination>(selectedCoin);
   const { orderBook, isLoading, spreadsForSigFigs } = useHyperliquidOrderBook(
     selectedCoin,
@@ -172,61 +172,56 @@ function OrderBookContent({ coin = "BTC" }) {
 
 function LoadingFallback() {
   return (
-    <div className="p-4 min-h-screen">
-      <div className="max-w-[400px] mx-auto">
-        <div className="h-10 w-full bg-gray-700/15 animate-pulse rounded mb-4"></div>
-        <div className="overflow-hidden border border-gray-800 h-[623px] w-[400px]">
-          <div className="flex justify-between items-center p-2 border-gray-800">
-            <div className="h-4 w-16 bg-gray-700/15 animate-pulse"></div>
-            <div className="h-4 w-20 bg-gray-700/15 animate-pulse"></div>
-          </div>
-          <div className="grid grid-cols-[20%_40%_40%] text-gray-400 text-sm font-medium py-1 px-2">
-            <div className="text-left">Price</div>
-            <div className="text-right">Size</div>
-            <div className="text-right">Total</div>
-          </div>
-          <div className="space-y-0">
-            {Array.from({ length: 11 }).map((_, i) => (
-              <div key={i} className="relative h-6 flex items-center">
-                <div className="absolute inset-0 bg-red-900/20"></div>
-                <div className="relative z-10 grid grid-cols-[20%_40%_40%] w-full px-2 text-sm">
-                  <div className="text-left">
-                    <div className="h-4 w-16 bg-gray-700/15 animate-pulse"></div>
-                  </div>
-                  <div className="text-right">
-                    <div className="h-4 w-12 bg-gray-700/15 animate-pulse ml-auto"></div>
-                  </div>
-                  <div className="text-right">
-                    <div className="h-4 w-12 bg-gray-700/15 animate-pulse ml-auto"></div>
-                  </div>
-                </div>
+    <div className="overflow-hidden border border-gray-800 h-[623px] w-[400px]">
+      <div className="flex justify-between items-center p-2 border-gray-800">
+        <div className="h-4 w-16 bg-gray-700/15 animate-pulse"></div>
+        <div className="h-4 w-20 bg-gray-700/15 animate-pulse"></div>
+      </div>
+      <div className="grid grid-cols-[20%_40%_40%] text-gray-400 text-sm font-medium py-1 px-2">
+        <div className="text-left">Price</div>
+        <div className="text-right">Size</div>
+        <div className="text-right">Total</div>
+      </div>
+      <div className="space-y-0">
+        {Array.from({ length: 11 }).map((_, i) => (
+          <div key={i} className="relative h-6 flex items-center">
+            <div className="absolute inset-0 bg-red-900/20"></div>
+            <div className="relative z-10 grid grid-cols-[20%_40%_40%] w-full px-2 text-sm">
+              <div className="text-left">
+                <div className="h-4 w-16 bg-gray-700/15 animate-pulse"></div>
               </div>
-            ))}
-          </div>
-          <div className="bg-gray-800 flex flex-row gap-8 justify-center items-center py-1">
-            <div className="text-white text-sm">Spread</div>
-            <div className="h-4 w-12 bg-gray-700/15 animate-pulse"></div>
-            <div className="h-4 w-8 bg-gray-700/15 animate-pulse"></div>
-          </div>
-          <div className="space-y-0">
-            {Array.from({ length: 11 }).map((_, i) => (
-              <div key={i} className="relative h-6 flex items-center">
-                <div className="absolute inset-0 bg-green-900/20"></div>
-                <div className="relative z-10 grid grid-cols-[20%_40%_40%] w-full px-2 text-sm">
-                  <div className="text-left">
-                    <div className="h-4 w-16 bg-gray-700/15 animate-pulse"></div>
-                  </div>
-                  <div className="text-right">
-                    <div className="h-4 w-12 bg-gray-700/15 animate-pulse ml-auto"></div>
-                  </div>
-                  <div className="text-right">
-                    <div className="h-4 w-12 bg-gray-700/15 animate-pulse ml-auto"></div>
-                  </div>
-                </div>
+              <div className="text-right">
+                <div className="h-4 w-12 bg-gray-700/15 animate-pulse ml-auto"></div>
               </div>
-            ))}
+              <div className="text-right">
+                <div className="h-4 w-12 bg-gray-700/15 animate-pulse ml-auto"></div>
+              </div>
+            </div>
           </div>
-        </div>
+        ))}
+      </div>
+      <div className="bg-gray-800 flex flex-row gap-8 justify-center items-center py-1">
+        <div className="text-white text-sm">Spread</div>
+        <div className="h-4 w-12 bg-gray-700/15 animate-pulse"></div>
+        <div className="h-4 w-8 bg-gray-700/15 animate-pulse"></div>
+      </div>
+      <div className="space-y-0">
+        {Array.from({ length: 11 }).map((_, i) => (
+          <div key={i} className="relative h-6 flex items-center">
+            <div className="absolute inset-0 bg-green-900/20"></div>
+            <div className="relative z-10 grid grid-cols-[20%_40%_40%] w-full px-2 text-sm">
+              <div className="text-left">
+                <div className="h-4 w-16 bg-gray-700/15 animate-pulse"></div>
+              </div>
+              <div className="text-right">
+                <div className="h-4 w-12 bg-gray-700/15 animate-pulse ml-auto"></div>
+              </div>
+              <div className="text-right">
+                <div className="h-4 w-12 bg-gray-700/15 animate-pulse ml-auto"></div>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
