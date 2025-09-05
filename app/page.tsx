@@ -172,10 +172,10 @@ function OrderBookContent({ coin = "BTC" }) {
 
 function LoadingFallback() {
   return (
-    <div className="overflow-hidden border border-gray-800 h-[623px] w-[400px]">
+    <div className="overflow-hidden border border-gray-800 h-[623px] max-w-[400px]">
       <div className="flex justify-between items-center p-2 border-gray-800">
-        <div className="h-4 w-16 bg-gray-700/15 animate-pulse"></div>
-        <div className="h-4 w-20 bg-gray-700/15 animate-pulse"></div>
+        <div className="h-5 w-16 bg-gray-700/15 animate-pulse"></div>
+        <div className="h-5 w-20 bg-gray-700/15 animate-pulse"></div>
       </div>
       <div className="grid grid-cols-[20%_40%_40%] text-gray-400 text-sm font-medium py-1 px-2">
         <div className="text-left">Price</div>
