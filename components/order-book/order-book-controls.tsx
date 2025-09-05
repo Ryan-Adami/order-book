@@ -25,14 +25,12 @@ export function OrderBookControls({
   selectedCoin,
   spreadsForSigFigs,
 }: OrderBookControlsProps) {
-  // Create array of options with their spread values
   const allSigFigOptions: nSigFigs[] = [null, 2, 3, 4, 5];
   const optionsWithSpreads = allSigFigOptions.map((option) => ({
     option,
     spreadValue: spreadsForSigFigs[option?.toString() || "null"],
   }));
 
-  // Remove duplicates and sort by spread value (least to largest)
   const uniqueOptionsWithSpreads = optionsWithSpreads.filter(
     (item, index, self) =>
       index === self.findIndex((t) => t.spreadValue === item.spreadValue)
@@ -44,7 +42,6 @@ export function OrderBookControls({
 
   const denominationOptions = [selectedCoin, "USD"];
 
-  // Helper function to format spread value
   const formatSpreadValue = (option: nSigFigs) => {
     const spreadValue = spreadsForSigFigs[option?.toString() || "null"];
     return spreadValue?.toLocaleString("en-US") || "—";

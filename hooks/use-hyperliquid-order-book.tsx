@@ -45,11 +45,10 @@ export const useHyperliquidOrderBook = (coin = "BTC", nSigFigs: nSigFigs) => {
   const connect = useCallback(
     async (isCoinChange = false) => {
       try {
-        // Only show loading if coin changed, not for sigfig changes
         if (isCoinChange) {
           setIsLoading(true);
-          setOrderBook(null); // Clear previous data immediately
-          setSpreadsForSigFigs({}); // Clear previous spread values to prevent flicker
+          setOrderBook(null);
+          setSpreadsForSigFigs({});
         }
 
         transport.current = new hl.WebSocketTransport();

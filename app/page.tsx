@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   nSigFigs,
@@ -19,7 +19,7 @@ import {
 import { Coin, COINS, Denomination } from "@/lib/constants";
 import { OrderBookPairDropdown } from "@/components/order-book/order-book-pair-dropdown";
 
-export default function HyperliquidOrderBook({ coin = "BTC" }) {
+function OrderBookContent({ coin = "BTC" }) {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -220,5 +220,76 @@ export default function HyperliquidOrderBook({ coin = "BTC" }) {
         <DebugInfo orderBook={orderBook} />
       </div>
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="p-4 min-h-screen">
+      <div className="max-w-[400px] mx-auto">
+        <div className="h-10 w-full bg-gray-700/15 animate-pulse rounded mb-4"></div>
+        <div className="overflow-hidden border border-gray-800 h-[623px] w-[400px]">
+          <div className="flex justify-between items-center p-2 border-gray-800">
+            <div className="h-4 w-16 bg-gray-700/15 animate-pulse"></div>
+            <div className="text-sm font-semibold">Order Book</div>
+            <div className="h-4 w-20 bg-gray-700/15 animate-pulse"></div>
+          </div>
+          <div className="grid grid-cols-[20%_40%_40%] text-gray-400 text-sm font-medium py-1 px-2">
+            <div className="text-left">Price</div>
+            <div className="text-right">Size</div>
+            <div className="text-right">Total</div>
+          </div>
+          <div className="space-y-0">
+            {Array.from({ length: 11 }).map((_, i) => (
+              <div key={i} className="relative h-6 flex items-center">
+                <div className="absolute inset-0 bg-red-900/20"></div>
+                <div className="relative z-10 grid grid-cols-[20%_40%_40%] w-full px-2 text-sm">
+                  <div className="text-left">
+                    <div className="h-4 w-16 bg-gray-700/15 animate-pulse"></div>
+                  </div>
+                  <div className="text-right">
+                    <div className="h-4 w-12 bg-gray-700/15 animate-pulse ml-auto"></div>
+                  </div>
+                  <div className="text-right">
+                    <div className="h-4 w-12 bg-gray-700/15 animate-pulse ml-auto"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="bg-gray-800 flex flex-row gap-8 justify-center items-center py-1">
+            <div className="text-white text-sm">Spread</div>
+            <div className="h-4 w-12 bg-gray-700/15 animate-pulse"></div>
+            <div className="h-4 w-8 bg-gray-700/15 animate-pulse"></div>
+          </div>
+          <div className="space-y-0">
+            {Array.from({ length: 11 }).map((_, i) => (
+              <div key={i} className="relative h-6 flex items-center">
+                <div className="absolute inset-0 bg-green-900/20"></div>
+                <div className="relative z-10 grid grid-cols-[20%_40%_40%] w-full px-2 text-sm">
+                  <div className="text-left">
+                    <div className="h-4 w-16 bg-gray-700/15 animate-pulse"></div>
+                  </div>
+                  <div className="text-right">
+                    <div className="h-4 w-12 bg-gray-700/15 animate-pulse ml-auto"></div>
+                  </div>
+                  <div className="text-right">
+                    <div className="h-4 w-12 bg-gray-700/15 animate-pulse ml-auto"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function HyperliquidOrderBook({ coin = "BTC" }) {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <OrderBookContent coin={coin} />
+    </Suspense>
   );
 }

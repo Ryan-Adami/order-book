@@ -41,12 +41,10 @@ export function processNumber(num: number): number {
   const decimal = new Decimal(num);
   const significantDigits = decimal.sd();
 
-  // If already has 5 or more sig figs, preserve as-is
   if (significantDigits >= 5) {
     return decimal.toNumber();
   }
 
-  // If fewer than 5 sig figs, round to exactly 5 significant figures
   return decimal.toSD(5).toNumber();
 }
 
