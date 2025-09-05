@@ -66,8 +66,6 @@ export function OrderBookControls({
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
-      <div className="text-sm font-semibold">Order Book</div>
-
       <DropdownMenu>
         <DropdownMenuTrigger>{denomination}</DropdownMenuTrigger>
         <DropdownMenuContent>
