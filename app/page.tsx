@@ -1,103 +1,224 @@
-import Image from "next/image";
+"use client";
+import { useMemo, useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import {
+  nSigFigs,
+  useHyperliquidOrderBook,
+} from "@/hooks/use-hyperliquid-order-book";
+import { OrderBookControls } from "@/components/order-book/order-book-controls";
+import { OrderBookHeader } from "@/components/order-book/order-book-header";
+import { OrderBookSection } from "@/components/order-book/order-book-section";
+import { OrderBookSpread } from "@/components/order-book/order-book-spread";
+import { DebugInfo } from "@/components/debug-info";
+import {
+  getStoredSettings,
+  setStoredSettings,
+  getDefaultSettings,
+  formatNumber,
+} from "@/lib/utils";
+import { Coin, COINS, Denomination } from "@/lib/constants";
+import { OrderBookPairDropdown } from "@/components/order-book/order-book-pair-dropdown";
 
-export default function Home() {
+export default function HyperliquidOrderBook({ coin = "BTC" }) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const getInitialCoin = (): Coin => {
+    const tradeParam = searchParams.get("trade");
+    if (tradeParam && COINS.includes(tradeParam as Coin)) {
+      return tradeParam as Coin;
+    }
+    if (tradeParam && !COINS.includes(tradeParam as Coin)) {
+      router.replace(window.location.pathname);
+    }
+    return coin;
+  };
+
+  const [selectedCoin, setSelectedCoin] = useState<Coin>(getInitialCoin());
+  const [sigFigs, setSigFigs] = useState<nSigFigs>(2);
+  const [denomination, setDenomination] = useState<Denomination>(selectedCoin);
+  const { orderBook, isLoading, spreadsForSigFigs } = useHyperliquidOrderBook(
+    selectedCoin,
+    sigFigs
+  );
+
+  const handleCoinSelection = (newCoin: Coin) => {
+    setSelectedCoin(newCoin);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("trade", newCoin);
+    router.push(`?${params.toString()}`);
+  };
+
+  useEffect(() => {
+    const storedSettings = getStoredSettings();
+    const coinSettings = storedSettings[selectedCoin];
+
+    if (coinSettings) {
+      setSigFigs(coinSettings.sigFigs);
+      setDenomination(coinSettings.denomination);
+    } else {
+      const defaultSettings = getDefaultSettings();
+      setSigFigs(defaultSettings.sigFigs);
+      setDenomination(defaultSettings.denomination);
+    }
+  }, [selectedCoin]);
+
+  useEffect(() => {
+    setStoredSettings(selectedCoin, { sigFigs, denomination });
+  }, [selectedCoin, sigFigs, denomination]);
+
+  const formatOrderBookData = useMemo(() => {
+    if (!orderBook?.levels) return null;
+
+    const bids = orderBook.levels[0].slice(0, 11);
+    const originalAsks = orderBook.levels[1].slice(0, 11);
+
+    let bidTotal = 0;
+    let bidUsdTotal = 0;
+    const processedBids = bids.map((bid) => {
+      const price = parseFloat(bid.px);
+      const size = parseFloat(bid.sz);
+      bidTotal += size;
+      bidUsdTotal += price * size;
+      return {
+        price,
+        size,
+        total: bidTotal,
+        usdTotal: bidUsdTotal,
+      };
+    });
+
+    let askTotal = 0;
+    let askUsdTotal = 0;
+    const processedAsksOriginal = originalAsks.map((ask) => {
+      const price = parseFloat(ask.px);
+      const size = parseFloat(ask.sz);
+      askTotal += size;
+      askUsdTotal += price * size;
+      return {
+        price,
+        size,
+        total: askTotal,
+        usdTotal: askUsdTotal,
+      };
+    });
+
+    const processedAsks = processedAsksOriginal.reverse();
+
+    const lowestAsk = Math.min(...originalAsks.map((a) => parseFloat(a.px)));
+    const highestBid = Math.max(...bids.map((b) => parseFloat(b.px)));
+    const spreadNumber = lowestAsk - highestBid;
+    const numberOfDecimals =
+      formatNumber(lowestAsk).split(".")?.[1]?.length ?? 0;
+    const spread = formatNumber(spreadNumber, [
+      numberOfDecimals,
+      numberOfDecimals,
+    ]);
+    const midPrice = (lowestAsk + highestBid) / 2;
+    const spreadPercentage = ((spreadNumber / midPrice) * 100).toFixed(3);
+
+    return {
+      asks: processedAsks,
+      bids: processedBids,
+      spread: { value: spread, percentage: spreadPercentage, numberOfDecimals },
+      maxAskTotal: askTotal,
+      maxBidTotal: bidTotal,
+    };
+  }, [orderBook]);
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
+    <div className="p-4 min-h-screen">
+      <div className="max-w-[400px] mx-auto">
+        <OrderBookPairDropdown
+          selectedCoin={selectedCoin}
+          handleCoinSelection={handleCoinSelection}
         />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+        {formatOrderBookData &&
+        !isLoading &&
+        Object.keys(spreadsForSigFigs).length > 0 ? (
+          <div className="overflow-hidden border border-gray-800 h-[623px]">
+            <OrderBookControls
+              sigFigs={sigFigs}
+              setSigFigs={setSigFigs}
+              denomination={denomination}
+              setDenomination={setDenomination}
+              selectedCoin={selectedCoin}
+              spreadsForSigFigs={spreadsForSigFigs}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+            <OrderBookHeader denomination={denomination} />
+            <OrderBookSection
+              orders={formatOrderBookData.asks}
+              maxTotal={formatOrderBookData.maxAskTotal}
+              denomination={denomination}
+            />
+            <OrderBookSpread
+              spreadValue={formatOrderBookData.spread.value}
+              spreadPercentage={formatOrderBookData.spread.percentage}
+            />
+            <OrderBookSection
+              orders={formatOrderBookData.bids}
+              maxTotal={formatOrderBookData.maxBidTotal}
+              isBids={true}
+              denomination={denomination}
+            />
+          </div>
+        ) : (
+          <div className="overflow-hidden border border-gray-800 h-[623px] w-[400px]">
+            <div className="flex justify-between items-center p-2 border-gray-800">
+              <div className="h-4 w-16 bg-gray-700/15 animate-pulse"></div>
+              <div className="text-sm font-semibold">Order Book</div>
+              <div className="h-4 w-20 bg-gray-700/15 animate-pulse"></div>
+            </div>
+            <div className="grid grid-cols-[20%_40%_40%] text-gray-400 text-sm font-medium py-1 px-2">
+              <div className="text-left">Price</div>
+              <div className="text-right">Size ({denomination})</div>
+              <div className="text-right">Total ({denomination})</div>
+            </div>
+            <div className="space-y-0">
+              {Array.from({ length: 11 }).map((_, i) => (
+                <div key={i} className="relative h-6 flex items-center">
+                  <div className="absolute inset-0 bg-red-900/20"></div>
+                  <div className="relative z-10 grid grid-cols-[20%_40%_40%] w-full px-2 text-sm">
+                    <div className="text-left">
+                      <div className="h-4 w-16 bg-gray-700/15 animate-pulse"></div>
+                    </div>
+                    <div className="text-right">
+                      <div className="h-4 w-12 bg-gray-700/15 animate-pulse ml-auto"></div>
+                    </div>
+                    <div className="text-right">
+                      <div className="h-4 w-12 bg-gray-700/15 animate-pulse ml-auto"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="bg-gray-800 flex flex-row gap-8 justify-center items-center py-1">
+              <div className="text-white text-sm">Spread</div>
+              <div className="h-4 w-12 bg-gray-700/15 animate-pulse"></div>
+              <div className="h-4 w-8 bg-gray-700/15 animate-pulse"></div>
+            </div>
+            <div className="space-y-0">
+              {Array.from({ length: 11 }).map((_, i) => (
+                <div key={i} className="relative h-6 flex items-center">
+                  <div className="absolute inset-0 bg-green-900/20"></div>
+                  <div className="relative z-10 grid grid-cols-[20%_40%_40%] w-full px-2 text-sm">
+                    <div className="text-left">
+                      <div className="h-4 w-16 bg-gray-700/15 animate-pulse"></div>
+                    </div>
+                    <div className="text-right">
+                      <div className="h-4 w-12 bg-gray-700/15 animate-pulse ml-auto"></div>
+                    </div>
+                    <div className="text-right">
+                      <div className="h-4 w-12 bg-gray-700/15 animate-pulse ml-auto"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        <DebugInfo orderBook={orderBook} />
+      </div>
     </div>
   );
 }
